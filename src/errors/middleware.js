@@ -1,7 +1,7 @@
 'use strict';
 const crypto = require('crypto');
 const { DomainError, ValidationError } = require('./index');
-
+const log = require('../log');
 function problem(req, res, { status, type, title, detail, extras = {} }) {
   res.status(status).type('application/problem+json')
     .json({ type, title, status, detail, instance: req.path, ...extras });
@@ -55,7 +55,7 @@ function errorHandler(err, req, res, next) {
     return;
   }
   const requestId = crypto.randomUUID();
-  console.log(`request ${requestId} failed: ${req.method} ${req.path}: ${err.stack || err}`);
+  log.line(`request ${requestId} failed: ${req.method} ${req.path}: ${err.stack || err}`);
   problem(req, res, {
     status: 500, type: '/errors/internal', title: 'Internal error',
     detail: 'Something went wrong on our side; quote the request id if you report it', extras: { requestId },

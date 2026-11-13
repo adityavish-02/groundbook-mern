@@ -2,6 +2,7 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const db = require('./db');
+const log = require('./log');
 const { document } = require('./openapi');
 const groundRepository = require('./grounds/repository');
 const { makeGroundService } = require('./grounds/service');
@@ -27,6 +28,7 @@ function createApp({ settings, clock }) {
     bookings: bookingRepository, grounds: groundRepository, events: eventRepository, clock, inTransaction,
   });
 
+  app.use(log.requests);
   app.use(express.json());
   app.get('/openapi.json', (req, res) => res.json(document));
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(document));

@@ -3,16 +3,22 @@ services:
     build: .
     ports:
       - "8080:8080"
-    environment:
-      MONGODB_URI: mongodb://mongo:27017/groundbook?replicaSet=rs0
+    # The settings: .env.example holds every one; a local .env (not committed) overrides what it names.
+    env_file:
+      - path: .env.example
+      - path: .env
+        required: false
     depends_on:
       mongo:
         condition: service_healthy
+    restart: unless-stopped
 
   mongo:
     image: mongo:7.0
     # A one-member replica set: MongoDB only runs transactions on a replica set.
     command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo-data:/data/db
     healthcheck:
       # Healthy once the replica set is running; the first check starts it, with mongo:27017 as its one member.
       test: >-
@@ -22,3 +28,7 @@ services:
       timeout: 10s
       retries: 20
       start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
