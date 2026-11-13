@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/groundbook?replicaSet=rs0
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7.0
+    # A one-member replica set: MongoDB only runs transactions on a replica set.
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      # Healthy once the replica set is running; the first check starts it, with mongo:27017 as its one member.
+      test: >-
+        mongosh --quiet --eval "try { rs.status().ok } catch (e) {
+        rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 5s
